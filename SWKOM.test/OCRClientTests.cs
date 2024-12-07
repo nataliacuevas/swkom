@@ -1,5 +1,8 @@
 ﻿using NUnit.Framework;
 using NPaperless.OCRLibrary;
+using System.Drawing.Drawing2D;
+using System.IO.Pipes;
+
 
 namespace SWKOM.test
 {
