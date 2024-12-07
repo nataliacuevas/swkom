@@ -6,6 +6,7 @@ using sws.DAL.Repositories;
 using sws.SL.DTOs;
 using System.Text;
 using log4net;
+using System.Collections.Generic;
 
 
 namespace sws.BLL
@@ -15,7 +16,7 @@ namespace sws.BLL
         private readonly IDocumentRepository _documentRepository;
         private readonly IMinioRepository _minioRepository;
         private readonly IMapper _mapper;
-        
+
         private static readonly ILog log = LogManager.GetLogger(typeof(DocumentLogic));
 
         public DocumentLogic(IDocumentRepository documentRepository, IMapper mapper, IMinioRepository minioRepository) 
@@ -23,7 +24,7 @@ namespace sws.BLL
             _documentRepository = documentRepository;
             _minioRepository = minioRepository;
             _mapper = mapper;
-                        
+ 
         }
 
         public async Task Add(UploadDocumentDTO uploadDocumentDTO)
@@ -39,10 +40,11 @@ namespace sws.BLL
                 
                 log.Info($"Document '{document.Name}' added successfully.");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 log.Error("Error adding document.", ex);
             }
+ 
         }
 
         public DownloadDocumentDTO? PopById(long id)
@@ -91,7 +93,7 @@ namespace sws.BLL
         }
 
 
-        public void send2RabbitMQ(UploadDocument docu) 
+        public void send2RabbitMQ(UploadDocument docu)
         {
             var factory = new ConnectionFactory
             {
@@ -114,7 +116,7 @@ namespace sws.BLL
                                  routingKey: "post",
                                  basicProperties: null,
                                  body: body);
-
+ 
         }
 
     }
