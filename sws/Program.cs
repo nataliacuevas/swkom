@@ -26,6 +26,7 @@ builder.Services.AddDbContext<UploadDocumentContext>(opt => opt.UseNpgsql(builde
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 // Register Repositories
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+builder.Services.AddScoped<IMinioRepository, MinioRepository>();
 // Register Businesslayer 
 builder.Services.AddScoped<IDocumentLogic, DocumentLogic>();
 // Register Businesslayer 
@@ -51,6 +52,8 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
 var app = builder.Build();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

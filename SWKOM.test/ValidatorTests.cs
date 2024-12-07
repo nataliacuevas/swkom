@@ -2,10 +2,7 @@
 using sws.Validators;
 using sws.SL.DTOs;
 using FluentValidation.TestHelper;
-using Microsoft.Extensions.Logging;
 using Moq;
-using sws.DAL.Repositories;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Http;
 
 namespace SWKOM.test
@@ -61,17 +58,7 @@ namespace SWKOM.test
             result.ShouldHaveValidationErrorFor(doc => doc.File)
                   .WithErrorMessage("Document content is required.");
         }
-        /*  to be evaluated after IFormFile change
-        [Test]
-        public void Should_HaveError_When_ContentExceedsMaxLength()
-        {
-            var longContent = new string('A', 5001);
-            var dto = new UploadDocumentDTO { Name = "Valid Name", File = longContent };
-            var result = _validator.TestValidate(dto);
-            result.ShouldHaveValidationErrorFor(doc => doc.Content)
-                  .WithErrorMessage("Document content cannot exceed 5000 characters.");
-        }
-        */
+    
         [Test]
         public void Should_NotHaveError_When_DocumentIsValid()
         {
