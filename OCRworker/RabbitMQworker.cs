@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NPaperless.OCRLibrary;
+using OCRworker.Repositories;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -12,13 +14,23 @@ namespace OCRworker
     public class RabbitMQworker : BackgroundService
     {
         private readonly IConnectionFactory _connectionFactory;
-       
+        private readonly IMinioRepository _minioRepository;
+        private readonly IOcrClient _ocrClient;
+        private readonly IElasticsearchRepository _elasticsearchRepository;
+
+
         private const string QueueName = "post";
 
-        public RabbitMQworker(IConnectionFactory connectionFactory)
+        public RabbitMQworker(
+            IConnectionFactory connectionFactory,
+            IMinioRepository minioRepository,
+            IOcrClient ocrClient,
+            IElasticsearchRepository elasticsearchRepository)
         {
             _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
-           
+            _minioRepository = minioRepository ?? throw new ArgumentNullException(nameof(minioRepository));
+            _ocrClient = ocrClient ?? throw new ArgumentNullException(nameof(ocrClient));
+            _elasticsearchRepository = elasticsearchRepository ?? throw new ArgumentNullException(nameof(elasticsearchRepository));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -63,11 +75,37 @@ namespace OCRworker
            
         }
 
-        private Task ProcessMessageAsync(string message)
+
+        async Task ProcessMessageAsync(string message)
         {
-            // Simulate business logic or external processing
+            string documentId = message.Split(" ").Last();
+
+
+            // Retrieve the file from MinIO
+            using var memoryStream = await _minioRepository.Get(documentId);
+
+            // Perform OCR processing
+            
+            var ocrContentText = _ocrClient.OcrPdf(memoryStream);
+
+            Console.WriteLine($"OCR Processed Content: {ocrContentText}");
+
+            // Initialize Elasticsearch
            
-            return Task.CompletedTask;
+            await _elasticsearchRepository.InitializeAsync();
+
+            // Index the document in Elasticsearch
+            await _elasticsearchRepository.IndexDocumentAsync(
+                id: long.Parse(documentId),
+                name: $"Document_{documentId}",
+                content: ocrContentText,
+                file: memoryStream.ToArray(),
+                timestamp: DateTime.UtcNow
+            );
+
+            Console.WriteLine($"Document {documentId} indexed successfully in Elasticsearch.");
         }
+
+
     }
 }
